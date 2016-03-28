@@ -10,17 +10,11 @@ import json
 class Mangler(object):
 	client =  MongoClient("mongodb://localhost:27017")
 	db = client.chameleon4
+	coll_ips = db.ips
+
 
 	def __init__(self):
-		self.client =  MongoClient("mongodb://localhost:27017")
-		self.db = self.client.chameleon4
-
-
-class Layer3Mangler(Mangler):
-
-	def __init__(self):
-		self.coll_layer3 = self.db.layer3_packets
-		self.coll_ips = self.db.ips
+		pass
 
 
 	def insert_or_update(self, ip, mac=None, host=None):
@@ -41,6 +35,32 @@ class Layer3Mangler(Mangler):
 			print "insert"
 			self.coll_ips.insert_one(json)
 
+
+
+
+class Layer2Mangler(Mangler):
+
+	def __init__(self):
+		self.coll_layer2 = self.db.layer2_packets
+
+
+	def run(self):
+		print "\n*** MANGLE LAYER2 PACKETS ***"
+		cursor = self.coll_layer2.find()
+		for doc in cursor:
+			if "arp" in doc  and  doc["arp"]["operation"] == "response":
+				self.insert_or_update(doc["arp"]["psrc"], doc["arp"]["hwsrc"])
+
+
+			print doc
+			self.coll_layer2.delete_one(doc)
+
+
+
+class Layer3Mangler(Mangler):
+
+	def __init__(self):
+		self.coll_layer3 = self.db.layer3_packets
 
 
 	def run(self):
@@ -65,31 +85,11 @@ class Layer3Mangler(Mangler):
 			self.coll_layer3.delete_one(doc)
 
 
+
 class Layer4Mangler(Mangler):
 
 	def __init__(self):
 		self.coll_layer4 = self.db.layer4_packets
-		self.coll_ips = self.db.ips
-
-
-	def insert_or_update(self, ip, mac=None, host=None):
-		json = {}
-		json["ip"] = ip
-		json["mac"] = mac
-		json["host"] = host
-
-		cursor = self.coll_ips.find({"ip": "%s" % ip })
-		if cursor.count() > 0:
-			print "update"
-			self.coll_ips.update_one( {"ip": "%s" % ip}, {
-        "$set": {
-            "mac": mac 
-        }
-    } )
-		else:
-			print "insert"
-			self.coll_ips.insert_one(json)
-
 
 
 	def run(self):
@@ -122,9 +122,11 @@ if __name__ == '__main__':
 	LOG.info("started at %s" % start_time)
 	
 	try:
-		mangler = Layer4Mangler()
+		mangler = Layer2Mangler()
 		mangler.run()
 		mangler = Layer3Mangler()
+		mangler.run()
+		mangler = Layer4Mangler()
 		mangler.run()
 	except KeyboardInterrupt:
 		LOG.info("KeyboardInterrupt received... exiting...")
