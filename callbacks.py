@@ -114,6 +114,17 @@ class Callbacks(object):
 		pkt_parsed["udp"]["sport"] = pkt.sprintf(r"%UDP.sport%")
 		pkt_parsed["udp"]["dport"] = pkt.sprintf(r"%UDP.dport%")
 
+		if DNS in pkt:
+			if pkt_parsed["udp"]["sport"] == "domain":
+				pkt.show()
+			if pkt.haslayer(DNS) and pkt.getlayer(DNS).qr == 1:
+				host = pkt.getlayer(DNS).qd.qname 
+				ip = pkt.getlayer(DNS).an[0].rdata 
+				print ip + ": " + host
+				pkt_parsed["udp"]["layer7"] = {}
+#				pkt_parsed["udp"]["layer7"]["dns-record"] = {}
+				pkt_parsed["udp"]["layer7"]["dns-record"] = [ip, host]
+
 
 	def recv_pkt_icmp(self, pkt, pkt_parsed):
 		pkt_parsed["icmp"] = {}

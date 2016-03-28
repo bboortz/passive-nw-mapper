@@ -22,8 +22,8 @@ class Sniffer(object):
 		print "\n*** SNIFFING ***"
 		p = sniff(prn=self.callbacks.cb_recv_pkt, iface=self.iface, timeout=self.timeout, count=self.count, filter=self.filter)
 
-		print "\n*** SUMMARY ***"
-		print p.nsummary()
+#		print "\n*** SUMMARY ***"
+#		print p.nsummary()
 
 
 

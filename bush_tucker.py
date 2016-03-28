@@ -36,6 +36,25 @@ class Mangler(object):
 			self.coll_ips.insert_one(json)
 
 
+	def add_host_to_ip(self, ip, host):
+		json = {}
+		json["ip"] = ip
+		json["mac"] = None
+		json["host"] = host
+
+		cursor = self.coll_ips.find({"ip": "%s" % ip })
+		if cursor.count() > 0:
+			print "update"
+			self.coll_ips.update_one( {"ip": "%s" % ip}, {
+        "$set": {
+            "host": host 
+        }
+    } )
+		else:
+			print "insert"
+			self.coll_ips.insert_one(json)
+
+
 
 
 class Layer2Mangler(Mangler):
@@ -96,6 +115,12 @@ class Layer4Mangler(Mangler):
 		print "\n*** MANGLE LAYER4 PACKETS ***"
 		cursor = self.coll_layer4.find()
 		for doc in cursor:
+			if "udp" in doc  and  "layer7" in doc["udp"]:
+				record = doc["udp"]["layer7"]["dns-record"]
+				ip = record[0]
+				host = record[1]
+				self.add_host_to_ip(ip, host)
+				
 			if "ip" in doc:
 				if "ether" in doc:
 					self.insert_or_update(doc["ip"]["src"], doc["ether"]["src"])
