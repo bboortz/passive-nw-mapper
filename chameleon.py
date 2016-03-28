@@ -2,6 +2,7 @@
 import sys,os
 from datetime import datetime
 from scapy.all import sniff
+from logger import Logger
 from callbacks import Callbacks
 
 iface='venet0:0'
@@ -9,11 +10,11 @@ iface='venet0:0'
 class Sniffer(object):
 
 	def __init__(self):
-		self.timeout = 120
-		self.count = 1000
+		self.timeout = None
+		self.count = None
 		self.filter = ""
 		self.iface = None
-#		self.iface = "venet0:0"
+		self.iface = "wlan0"
 		self.callbacks = Callbacks()
 
 
@@ -23,16 +24,6 @@ class Sniffer(object):
 
 		print "\n*** SUMMARY ***"
 		print p.nsummary()
-
-
-
-class Logger(object):
-
-	def __init__(self):
-		pass
-
-	def info(self, msg):
-		print("[*] %s" % msg)	
 
 
 

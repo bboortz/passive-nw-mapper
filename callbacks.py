@@ -1,11 +1,34 @@
 from scapy.all import *
+from pymongo import MongoClient
 import time
 import json
 
 class Callbacks(object):
 
 	def __init__(self):
-		self.cb_recv_pkt = self.recv_pkt
+		self.cb_recv_pkt = self.upload_pkt
+		self.client =  MongoClient("mongodb://localhost:27017")
+		self.db = self.client.chameleon4
+		self.coll_layer4 = self.db.layer4_packets
+		self.coll_layer3 = self.db.layer3_packets
+		self.coll_layer2 = self.db.layer2_packets
+
+
+	def upload_pkt(self, pkt):
+		pkt_json = self.recv_pkt(pkt)
+
+		if TCP in pkt  or  UDP in pkt:
+			self.coll_layer4.insert_one(pkt_json)
+
+		elif IP in pkt  or  IPv6 in pkt:
+			self.coll_layer3.insert_one(pkt_json)
+
+		elif Ether in pkt  or  ARP in pkt:
+			self.coll_layer2.insert_one(pkt_json)
+
+		print( "insert: %s" % pkt_json )
+
+
 
 	def recv_pkt(self, pkt):
 		pkt_parsed = {}
@@ -37,7 +60,8 @@ class Callbacks(object):
 
 		if len(pkt_parsed.keys()) > 1:
 			pkt_json = json.dumps(pkt_parsed)
-			return pkt_json
+#			return pkt_json
+			return pkt_parsed
 		else:
 			print pkt.show()
 
