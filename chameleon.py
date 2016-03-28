@@ -10,9 +10,10 @@ class Sniffer(object):
 
 	def __init__(self):
 		self.timeout = 120
-		self.count = 10
+		self.count = 1000
 		self.filter = ""
-		self.iface = "venet0:0"
+		self.iface = None
+#		self.iface = "venet0:0"
 		self.callbacks = Callbacks()
 
 
